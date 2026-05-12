@@ -118,7 +118,7 @@ class RecordConfig:
             # Placo IK settings (now read from placo section)
             placo_cfg = teleop.get("placo", {})
             self.oculus_robot_ip = placo_cfg.get("robot_ip", "192.168.110.15")
-            self.oculus_robot_port = placo_cfg.get("robot_port", 4242)
+            self.oculus_robot_port = placo_cfg.get("robot_port", 5252)
             urdf_path = placo_cfg.get("ik_urdf_path", "")
             # Resolve relative urdf_path to project root (lerobot_franka_isoteleop/)
             if urdf_path and not Path(urdf_path).is_absolute():
@@ -254,7 +254,8 @@ def run_record(record_cfg: RecordConfig):
 
         # Create the robot and teleoperator configurations
         camera_config = {"wrist_image": wrist_image_cfg, "exterior_image": exterior_image_cfg}
-        
+        # camera_config = {"wrist_image": wrist_image_cfg}
+      
         # Create teleop config using the new method
         teleop_config = record_cfg.create_teleop_config()
         

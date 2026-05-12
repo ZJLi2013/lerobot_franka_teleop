@@ -45,7 +45,7 @@ class OculusTeleopConfig(BaseTeleopConfig):
     # Placo IK settings
     enable_ik: bool = True              # Whether to enable IK computation for joint positions
     robot_ip: str = "192.168.110.15"    # Franka robot IP for reading joint states
-    robot_port: int = 4242              # Franka zerorpc port
+    robot_port: int = 5252              # Franka zerorpc port
     urdf_path: str = ""                 # Path to URDF file (no mesh version)
     ik_iterations: int = 3              # Number of IK solver iterations
     ik_pos_weight: float = 8.0          # IK position task weight

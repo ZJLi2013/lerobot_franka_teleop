@@ -9,7 +9,7 @@ from typing import Any, Dict
 
 from .base_teleop import BaseTeleop
 from .config_teleop import OculusTeleopConfig
-from .oculus.oculus_robot import OculusRobot
+# from .oculus.oculus_robot import OculusRobot
 
 logger = logging.getLogger(__name__)
 

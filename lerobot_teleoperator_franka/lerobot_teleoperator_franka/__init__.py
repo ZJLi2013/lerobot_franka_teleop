@@ -13,7 +13,7 @@ from .base_teleop import BaseTeleop
 # Teleoperation implementations
 from .dynamixel_teleop import DynamixelTeleop
 from .spacemouse_teleop import SpacemouseTeleop
-from .oculus_teleop import OculusTeleop
+# from .oculus_teleop import OculusTeleop
 
 # Factory functions
 from .teleop_factory import create_teleop, create_teleop_config, get_action_features

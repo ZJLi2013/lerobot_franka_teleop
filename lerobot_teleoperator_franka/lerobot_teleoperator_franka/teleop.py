@@ -23,7 +23,7 @@ import logging
 from pathlib import Path
 from .dynamixel.dynamixel_robot import DynamixelRobot
 from .spacemouse.spacemouse_robot import SpaceMouseRobot
-from .oculus.oculus_robot import OculusRobot
+# from .oculus.oculus_robot import OculusRobot
 from typing import Any, Dict
 import yaml
 from lerobot.utils.errors import DeviceNotConnectedError

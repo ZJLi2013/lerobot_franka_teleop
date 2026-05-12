@@ -15,7 +15,7 @@ from lerobot.cameras.configs import ColorMode, Cv2Rotation
 from lerobot.cameras.realsense.camera_realsense import RealSenseCameraConfig
 
 HOME_JOINT_POSITION = np.array(
-    [1.58472168, -1.56486702, -1.74356186, -2.634835, -0.11180906, 4.2022109, -1.51133597]
+    [0.0, 0.0, 0.0, -1.57, 0.0, 1.57, -0.785]
 )
 
 logger = logging.getLogger(__name__)
@@ -84,7 +84,7 @@ class Franka(Robot):
         try:
             logger.info("\n===== [ROBOT] Connecting to Franka robot =====")
             
-            franka = FrankaInterfaceClient(ip=robot_ip, port=4242)
+            franka = FrankaInterfaceClient(ip=robot_ip, port=5252)
             franka.robot_start_joint_impedance_control()
 
             joint_positions = franka.robot_get_joint_positions()

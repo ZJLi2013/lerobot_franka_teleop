@@ -180,5 +180,5 @@ class FrankaInterfaceServer:
 if __name__ == "__main__":
     server = FrankaInterfaceServer()
     s = zerorpc.Server(server)
-    s.bind("tcp://0.0.0.0:4242")
+    s.bind("tcp://0.0.0.0:5252")
     s.run()

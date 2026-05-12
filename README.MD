@@ -162,7 +162,7 @@ sudo chmod 666 <your_master_port>
 
 Manually move the master arm so that its joint angles roughly match the current joint angles of the slave arm. This is done to calculate the joint angle offset cycle between the master and slave arms. Then run:
 ```bash
-utils-joint-offsets
+utils-joint-offsets   # check it everytime start record
 ```
 Copy the resulting `joint_offsets` into the corresponding fields in `record_cfg.yaml`.
 

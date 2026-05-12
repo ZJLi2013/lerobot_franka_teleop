@@ -15,7 +15,7 @@ from .config_teleop import (
 )
 from .dynamixel_teleop import DynamixelTeleop
 from .spacemouse_teleop import SpacemouseTeleop
-from .oculus_teleop import OculusTeleop
+# from .oculus_teleop import OculusTeleop
 
 
 def create_teleop(config: BaseTeleopConfig) -> BaseTeleop:
