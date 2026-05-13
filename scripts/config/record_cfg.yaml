@@ -122,7 +122,7 @@ inference:
   episode_idx: 0                                       # which episode to replay
   task_description: "pick up the Shanghai Green and put them into the brown basket"
   device: "cuda"                                       # "cuda" or "cpu"
-  max_frames:                                          # leave empty/null to run the whole episode
+  max_frames:   60                                       # leave empty/null to run the whole episode
   print_every: 1                                       # log every N frames (0 = silent)
 
 

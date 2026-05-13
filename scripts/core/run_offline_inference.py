@@ -9,6 +9,8 @@ Reads its parameters from `scripts/config/record_cfg.yaml` under the
 """
 
 import logging
+import time
+import traceback
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -21,7 +23,18 @@ from lerobot.datasets.lerobot_dataset import LeRobotDataset
 from lerobot.policies.factory import make_policy, make_pre_post_processors
 from lerobot.utils.utils import get_safe_torch_device
 
+# Force INFO level even if some upstream module already configured root logger.
 logging.basicConfig(level=logging.INFO, format="%(message)s")
+logging.getLogger().setLevel(logging.INFO)
+
+
+def _say(msg: str = "") -> None:
+    """Print a progress line with explicit flushing.
+
+    We use plain print (not logging) so messages always appear regardless of
+    how upstream libraries have (re)configured the root logger.
+    """
+    print(msg, flush=True)
 
 
 class OfflineInferenceConfig:
@@ -33,7 +46,6 @@ class OfflineInferenceConfig:
         self.episode_idx: int = cfg.get("episode_idx", 0)
         self.task_description: str = cfg.get("task_description", "")
         self.device: str = cfg.get("device", "cuda")
-        # Optional cap on number of frames; None means run through the whole episode.
         self.max_frames: Optional[int] = cfg.get("max_frames")
         self.print_every: int = cfg.get("print_every", 1)
 
@@ -57,11 +69,12 @@ def _to_batch(sample: Dict[str, Any], device: torch.device) -> Dict[str, Any]:
 
 
 def run_offline_inference(cfg: OfflineInferenceConfig) -> None:
-    logging.info("====== [START] Offline inference ======")
-    logging.info(f"  pretrained_path : {cfg.pretrained_path}")
-    logging.info(f"  dataset_repo_id : {cfg.dataset_repo_id}")
-    logging.info(f"  episode_idx     : {cfg.episode_idx}")
-    logging.info(f"  device          : {cfg.device}")
+    _say("====== [START] Offline inference ======")
+    _say(f"  pretrained_path : {cfg.pretrained_path}")
+    _say(f"  dataset_repo_id : {cfg.dataset_repo_id}")
+    _say(f"  episode_idx     : {cfg.episode_idx}")
+    _say(f"  device          : {cfg.device}")
+    _say(f"  max_frames      : {cfg.max_frames}")
 
     if not Path(cfg.pretrained_path).exists():
         raise FileNotFoundError(
@@ -69,20 +82,34 @@ def run_offline_inference(cfg: OfflineInferenceConfig) -> None:
             "Make sure it points to a directory containing `config.json`."
         )
 
-    # Load the policy config that was saved at training time. Works for any
-    # policy type registered in lerobot (act / diffusion / pi0 / pi05 / ...).
+    t0 = time.perf_counter()
+    _say("[1/5] Loading PreTrainedConfig ...")
     policy_cfg = PreTrainedConfig.from_pretrained(cfg.pretrained_path)
     policy_cfg.pretrained_path = cfg.pretrained_path
     policy_cfg.device = cfg.device
+    _say(f"      done in {time.perf_counter() - t0:.1f}s "
+         f"(policy type = {policy_cfg.type})")
 
+    t0 = time.perf_counter()
+    _say(f"[2/5] Loading dataset {cfg.dataset_repo_id} (episode {cfg.episode_idx}) ...")
     dataset = LeRobotDataset(cfg.dataset_repo_id, episodes=[cfg.episode_idx])
+    _say(f"      done in {time.perf_counter() - t0:.1f}s "
+         f"(num_frames in episode = {dataset.num_frames})")
 
+    t0 = time.perf_counter()
+    _say("[3/5] Building policy (this loads weights into GPU; may take a while for VLA) ...")
     policy = make_policy(cfg=policy_cfg, ds_meta=dataset.meta)
+    _say(f"      done in {time.perf_counter() - t0:.1f}s")
+
+    t0 = time.perf_counter()
+    _say("[4/5] Building pre/post processors ...")
     preprocessor, postprocessor = make_pre_post_processors(
         policy_cfg=policy_cfg,
         pretrained_path=cfg.pretrained_path,
         preprocessor_overrides={"device_processor": {"device": cfg.device}},
     )
+    _say(f"      done in {time.perf_counter() - t0:.1f}s")
+
     policy.eval()
     policy.reset()
     device = get_safe_torch_device(cfg.device)
@@ -90,11 +117,14 @@ def run_offline_inference(cfg: OfflineInferenceConfig) -> None:
     n_frames = dataset.num_frames
     if cfg.max_frames is not None:
         n_frames = min(n_frames, cfg.max_frames)
-    logging.info(f"  episode_frames  : {n_frames}\n")
+    _say(f"[5/5] Running inference on {n_frames} frame(s)\n")
 
     errors = []
+    last_t = time.perf_counter()
     with torch.no_grad():
         for idx in range(n_frames):
+            t_step = time.perf_counter()
+
             sample = dataset[idx]
             batch = _to_batch(sample, device)
             batch["task"] = cfg.task_description
@@ -107,17 +137,24 @@ def run_offline_inference(cfg: OfflineInferenceConfig) -> None:
             err = float(np.sqrt(np.mean((action - gt_action) ** 2)))
             errors.append(err)
 
+            step_dt = time.perf_counter() - t_step
+
             if cfg.print_every > 0 and idx % cfg.print_every == 0:
-                logging.info(
-                    f"[{idx:04d}] pred={np.round(action, 3)} "
-                    f"gt={np.round(gt_action, 3)} |rmse|={err:.4f}"
+                _say(
+                    f"[{idx:04d}] {step_dt*1000:6.0f}ms  "
+                    f"pred={np.round(action, 3)} "
+                    f"gt={np.round(gt_action, 3)} "
+                    f"|rmse|={err:.4f}"
                 )
+            last_t = time.perf_counter()
 
     if errors:
-        logging.info(
+        _say(
             f"\n====== [DONE] frames={len(errors)} "
             f"mean_rmse={np.mean(errors):.4f} max_rmse={np.max(errors):.4f} ======"
         )
+    else:
+        _say("\n====== [DONE] No frames were processed (n_frames=0) ======")
 
 
 def main() -> None:
@@ -133,7 +170,15 @@ def main() -> None:
         )
 
     inference_cfg = OfflineInferenceConfig(cfg["inference"])
-    run_offline_inference(inference_cfg)
+
+    try:
+        run_offline_inference(inference_cfg)
+    except BaseException:
+        # Make absolutely sure any failure is visible (and not swallowed by
+        # logging buffering or upstream `except Exception: pass` patterns).
+        _say("\n====== [ERROR] Inference crashed; full traceback below ======")
+        traceback.print_exc()
+        raise
 
 
 if __name__ == "__main__":
