@@ -8,7 +8,7 @@ record:
   user_notes:  # any additional notes about the dataset
   fps: 15 # dataset and camera frame rate
   control_mode: &control_mode "isoteleop" # "isoteleop" or "spacemouse" or "oculus"
-  run_mode: "run_record" # "run_record" or "run_policy" or "run_mix"
+  run_mode: "run_policy" # "run_record" or "run_policy" or "run_mix"
 
   teleop:
     control_mode: *control_mode 
@@ -112,6 +112,18 @@ replay:
 visualize:
   dataset_name: babycare/milk_power_20260321_v03
   episode_index: 0 # episode index to visualize
+
+inference:
+  # Offline policy inference on a recorded dataset (no robot / no camera required).
+  # Used by the `franka-infer-offline` command.
+  # pretrained_path: "/home/deepcybo/lerobot/franka_workspace/outputs/zhonghuai/lajiao_20260318_merged/act_test2/checkpoints/last/pretrained_model"  # must contain config.json
+  pretrained_path: "/home/xunwang2/project/lerobot_test/output_pi0_2/checkpoints/000500/pretrained_model"
+  dataset_repo_id: Ziguan/pocket_tissues_2_paper_cup_2cam # babycare/milk_power_20260321_v03   # dataset to feed observations from
+  episode_idx: 0                                       # which episode to replay
+  task_description: "pick up the Shanghai Green and put them into the brown basket"
+  device: "cuda"                                       # "cuda" or "cpu"
+  max_frames:                                          # leave empty/null to run the whole episode
+  print_every: 1                                       # log every N frames (0 = silent)
 
 
 

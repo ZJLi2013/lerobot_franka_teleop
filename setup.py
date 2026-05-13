@@ -28,6 +28,7 @@ setup(
             "franka-visualize = scripts.core.run_visualize:main",
             "franka-reset = scripts.core.reset_robot:main",
             "franka-train = scripts.core.run_train:main",
+            "franka-infer-offline = scripts.core.run_offline_inference:main",
             # utils commands (data utilities)
             "utils-joint-offsets = scripts.utils.teleop_joint_offsets:main",
 
