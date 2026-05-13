@@ -90,6 +90,7 @@ pip install -e .
 mkdir franka_data_collection && cd franka_data_collection
 git clone https://github.com/Shenzhaolong1330/lerobot_franka_isoteleop.git
 cd lerobot_franka_isoteleop
+cp -r ../../lerobot_franka_teleop/lerobot_teleoperator_franka . # over-write the lerobot_teleoperator_franka, change the source path per your directory
 pip install -e .
 ```
 
