@@ -117,13 +117,22 @@ inference:
   # Offline policy inference on a recorded dataset (no robot / no camera required).
   # Used by the `franka-infer-offline` command.
   # pretrained_path: "/home/deepcybo/lerobot/franka_workspace/outputs/zhonghuai/lajiao_20260318_merged/act_test2/checkpoints/last/pretrained_model"  # must contain config.json
-  pretrained_path: "/home/xunwang2/project/lerobot_test/output_pi0_2/checkpoints/000500/pretrained_model"
+  #pretrained_path: "/home/xunwang2/project/lerobot_test/output_pi0_2/checkpoints/000500/pretrained_model"
+  pretrained_path: "/home/xunwang2/project/lerobot_test/pi0_base"
   dataset_repo_id: Ziguan/pocket_tissues_2_paper_cup_2cam # babycare/milk_power_20260321_v03   # dataset to feed observations from
   episode_idx: 0                                       # which episode to replay
   task_description: "pick up the Shanghai Green and put them into the brown basket"
   device: "cuda"                                       # "cuda" or "cpu"
-  max_frames:   60                                       # leave empty/null to run the whole episode
+  max_frames:   20                                       # leave empty/null to run the whole episode
   print_every: 1                                       # log every N frames (0 = silent)
+
+  # Optional: rename dataset image keys to match what the policy was trained with.
+  # Useful when running e.g. pi0_base (expects base_0_rgb / left_wrist_0_rgb /
+  # right_wrist_0_rgb) on a dataset with different camera names.
+  # Leave empty (or comment out the entries) to use dataset keys as-is.
+  image_key_map:
+    observation.images.front: observation.images.base_0_rgb
+    observation.images.side:  observation.images.left_wrist_0_rgb
 
 
 

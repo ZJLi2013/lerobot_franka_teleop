@@ -48,23 +48,36 @@ class OfflineInferenceConfig:
         self.device: str = cfg.get("device", "cuda")
         self.max_frames: Optional[int] = cfg.get("max_frames")
         self.print_every: int = cfg.get("print_every", 1)
+        # Optional remap from dataset image-key -> model's expected image-key.
+        # Useful when the dataset was recorded with cameras named
+        # `observation.images.front` etc. but the policy was trained with
+        # different names (e.g. pi0_base expects
+        # `observation.images.base_0_rgb` / `left_wrist_0_rgb` / ...).
+        self.image_key_map: Dict[str, str] = cfg.get("image_key_map") or {}
 
 
-def _to_batch(sample: Dict[str, Any], device: torch.device) -> Dict[str, Any]:
+def _to_batch(
+    sample: Dict[str, Any],
+    device: torch.device,
+    image_key_map: Optional[Dict[str, str]] = None,
+) -> Dict[str, Any]:
     """Convert a single dataset sample into a batched dict on `device`.
 
     - Keeps only `observation.*` keys (policies do not need `action` at inference).
     - Adds a leading batch dimension for tensors.
+    - Optionally renames keys via `image_key_map` (dataset_key -> model_key).
     - Strings / metadata pass through untouched.
     """
+    image_key_map = image_key_map or {}
     batch: Dict[str, Any] = {}
     for key, value in sample.items():
         if not key.startswith("observation."):
             continue
+        out_key = image_key_map.get(key, key)
         if torch.is_tensor(value):
-            batch[key] = value.unsqueeze(0).to(device)
+            batch[out_key] = value.unsqueeze(0).to(device)
         else:
-            batch[key] = value
+            batch[out_key] = value
     return batch
 
 
@@ -126,7 +139,7 @@ def run_offline_inference(cfg: OfflineInferenceConfig) -> None:
             t_step = time.perf_counter()
 
             sample = dataset[idx]
-            batch = _to_batch(sample, device)
+            batch = _to_batch(sample, device, cfg.image_key_map)
             batch["task"] = cfg.task_description
 
             batch = preprocessor(batch)
@@ -134,7 +147,29 @@ def run_offline_inference(cfg: OfflineInferenceConfig) -> None:
             action = postprocessor(action).squeeze(0).cpu().numpy()
 
             gt_action = sample["action"].numpy()
-            err = float(np.sqrt(np.mean((action - gt_action) ** 2)))
+
+            # VLA policies (pi0 / pi05 / ...) pad action to a fixed
+            # `max_action_dim` (default 32) so the same model can drive
+            # robots with different joint counts. Truncate the prediction
+            # to the dataset's real action dimension before comparing.
+            if action.shape[0] != gt_action.shape[0]:
+                if action.shape[0] > gt_action.shape[0]:
+                    action_cmp = action[: gt_action.shape[0]]
+                    if idx == 0:
+                        _say(
+                            f"[INFO] policy outputs action of shape {action.shape}; "
+                            f"truncating to dataset action shape {gt_action.shape} "
+                            f"for RMSE comparison."
+                        )
+                else:
+                    raise ValueError(
+                        f"Predicted action shape {action.shape} is smaller than "
+                        f"dataset action shape {gt_action.shape}; cannot compare."
+                    )
+            else:
+                action_cmp = action
+
+            err = float(np.sqrt(np.mean((action_cmp - gt_action) ** 2)))
             errors.append(err)
 
             step_dt = time.perf_counter() - t_step
@@ -142,7 +177,7 @@ def run_offline_inference(cfg: OfflineInferenceConfig) -> None:
             if cfg.print_every > 0 and idx % cfg.print_every == 0:
                 _say(
                     f"[{idx:04d}] {step_dt*1000:6.0f}ms  "
-                    f"pred={np.round(action, 3)} "
+                    f"pred={np.round(action_cmp, 3)} "
                     f"gt={np.round(gt_action, 3)} "
                     f"|rmse|={err:.4f}"
                 )
