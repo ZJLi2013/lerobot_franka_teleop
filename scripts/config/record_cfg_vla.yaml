@@ -1,0 +1,96 @@
+# SmolVLA 真机部署配置
+# 使用方法：将此文件复制为 record_cfg.yaml，或修改 run_record.py 指定配置路径
+#
+# 首次真机流程：
+#   1. debug: 1, fps: 5  → 只看 action 输出，不执行
+#   2. debug: 0, fps: 5  → 低速真机，手放急停按钮
+#   3. fps: 10 → 15      → 逐步提速
+
+record:
+  repo_id: &repo_id "your_username/smolvla_eval"
+  debug: 1                  # ⚠ 首次务必设 1！确认 action 合理后再改 0
+  user_notes: "SmolVLA policy evaluation on real Franka"
+  fps: 5                   # ⚠ 首次务必低速！确认安全后再提到 10/15
+  control_mode: &control_mode "isoteleop"
+  run_mode: "run_policy"   # 策略控制模式
+
+  teleop:
+    control_mode: *control_mode
+    dynamixel_config:
+      port: "/dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FTBYEU26-if00-port0"
+      hardware_offsets: [-0.12183455210997171, -0.002845966063342931, -0.06250428305273764, -2.0498354593763044, 0.05259129256457092, 1.9984585428810417, -0.9046528345737315]
+      use_gripper: &use_gripper True
+      joint_ids: [1, 2, 3, 4, 5, 6, 7]
+      joint_offsets: [3.142, 3.142, 3.142, 3.142, 1.571, 1.571, 7.068]
+      joint_signs: [1, -1, 1, 1, 1, 1, 1]
+      gripper_config: [8, 0.9664079, 1.9404857]
+    spacemouse_config:
+      channel_ids: [0, 1, 2, 3, 4, 5]
+      channel_signs: [-1, -1, 1, -1, -1, 1]
+      use_gripper: *use_gripper
+      pose_scaler: [0.01, 0.05]
+    oculus_config:
+      ip: "192.168.110.62"
+      use_gripper: *use_gripper
+      pose_scaler: [3.0, 2.0]
+      channel_signs: [1, 1, 1, -1, -1, 1]
+    placo:
+      visualize_placo: False
+      placo_dt: 0.01
+      enable_ik: False
+      robot_ip: "192.168.110.15"
+      robot_port: 5252
+      ik_urdf_path: "assets/franka_urdf/fr3v2_no_mesh.urdf"
+      ik_iterations: 30
+      ik_pos_weight: 8.0
+      ik_ori_weight: 3.0
+      ik_joints_weight: 0.2
+      ik_regularization: 1.0e-4
+
+  robot:
+    ip: &ip "192.168.1.100"
+    use_gripper: *use_gripper
+    close_threshold: 0.7
+    gripper_bin_threshold: 0.98
+    gripper_reverse: false
+    gripper_max_open: 0.085
+    execute_mode: "ee_pose"
+
+  policy:
+    type: "smolvla"         # ← SmolVLA 策略（需要 run_record.py 中添加对应分支）
+    device: "cuda"
+    push_to_hub: False
+    pretrained_path: "/path/to/smolvla/pretrained_model"  # ← 填你的 SmolVLA checkpoint 路径
+    # pretrained_path 下必须包含 config.json
+
+  task:
+    description: "pick up the green block and place into the red bin"  # 必须与训练时一致
+    num_episodes: 1         # 首次只跑 1 个 episode
+    display: True
+    resume: false
+    resume_dataset: ""
+
+  time:
+    episode_time_sec: 30    # 首次真机 30s 够观察，确认安全后再加长
+    reset_time_sec: 30
+    save_meta_period: 1
+
+  cameras:
+    wrist_cam_serial: "244222071902"
+    exterior_cam_serial: "401622070138"
+    width: 424
+    height: 240
+
+  storage:
+    push_to_hub: False
+
+replay:
+  dataset_name: your_username/smolvla_eval
+  episode_idx: 0
+  robot:
+    ip: *ip
+  control_mode: *control_mode
+
+visualize:
+  dataset_name: your_username/smolvla_eval
+  episode_index: 0

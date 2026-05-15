@@ -72,20 +72,17 @@ record:
     type: "act"  # 策略类型 (act, diffusion)
     device: "cuda"  # 运行设备 (cuda, cpu)
     push_to_hub: False  # 禁用模型推送
-    # pretrained_path: "/home/deepcybo/lerobot/franka_workspace/outputs/lihao-test-0310/diffusion_test1/checkpoints/last/pretrained_model"
     pretrained_path: "/home/deepcybo/lerobot/franka_workspace/outputs/zhonghuai/lajiao_20260318_merged/act_test2/checkpoints/last/pretrained_model"
     # pretrained_path: "/home/deepcybo/lerobot/franka_workspace/outputs/lihao-test/act_test3/checkpoints/020000/pretrained_model"  
     # 预训练模型路径下要包括config.json
 
   task:
     # description: "Pick up the green cube and put it into the trash bin." # task description
-    description: "pick up the Shanghai Green and put them into the brown basket" # task description
-    # description: "pick up the red chili and put it into the brown basket" # task description
-    # description: "pick up the red chili and put it into the brown basket"
-    num_episodes: 10 # number of episodes to record
+    description: "pick up the red cube" # task description
+    num_episodes: 80 # number of episodes to record
     display: True # Whether to display the data during recording
-    resume: false # whether to resume from an existing dataset
-    resume_dataset: roboticiq/pick_all_yellow_cube_to_brown_basket_20260208_v01 # dataset to resume from if resume is True
+    resume: true # whether to resume from an existing dataset
+    resume_dataset: babycare/mil_power_2_20260514_v07 # dataset to resume from if resume is True
   
   time:
     episode_time_sec: 6000 # max time per episode in seconds
@@ -112,7 +109,3 @@ replay:
 visualize:
   dataset_name: babycare/milk_power_20260321_v03
   episode_index: 0 # episode index to visualize
-
-
-
-

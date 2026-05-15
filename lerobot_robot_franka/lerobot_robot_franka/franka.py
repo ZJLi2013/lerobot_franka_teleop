@@ -246,6 +246,11 @@ class Franka(Robot):
         
         return action
 
+    # Franka FR3 关节物理极限 (rad)
+    JOINT_LIMITS_MIN = np.array([-2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973])
+    JOINT_LIMITS_MAX = np.array([ 2.8973,  1.7628,  2.8973, -0.0698,  2.8973,  3.7525,  2.8973])
+    MAX_JOINT_DELTA = 0.5   # 单步最大允许关节变化量 (rad, ~28°)
+
     def _send_action_isoteleop(self, action: dict[str, Any]) -> None:
         """Send action in isoteleop mode (joint positions)."""
         target_joints = np.array([action[f"joint_{i+1}.pos"] for i in range(self._num_joints)])
@@ -253,8 +258,31 @@ class Franka(Robot):
         if not self.config.debug:
             try:
                 joint_positions = self._robot.robot_get_joint_positions()
-                max_delta = (np.abs(joint_positions - target_joints)).max()
-                
+                delta_per_joint = np.abs(joint_positions - target_joints)
+                max_delta = delta_per_joint.max()
+                worst_joint = int(delta_per_joint.argmax()) + 1
+
+                if np.any(target_joints < self.JOINT_LIMITS_MIN) or np.any(target_joints > self.JOINT_LIMITS_MAX):
+                    violated = []
+                    for i in range(self._num_joints):
+                        if target_joints[i] < self.JOINT_LIMITS_MIN[i]:
+                            violated.append(f"J{i+1}={target_joints[i]:.3f} < min {self.JOINT_LIMITS_MIN[i]:.3f}")
+                        if target_joints[i] > self.JOINT_LIMITS_MAX[i]:
+                            violated.append(f"J{i+1}={target_joints[i]:.3f} > max {self.JOINT_LIMITS_MAX[i]:.3f}")
+                    logger.warning(f"[SAFETY] REJECTED: joint limits violated: {', '.join(violated)}")
+                    logger.warning(f"[SAFETY] target={[f'{x:.3f}' for x in target_joints]}")
+                    return
+
+                if max_delta > self.MAX_JOINT_DELTA:
+                    logger.warning(
+                        f"[SAFETY] REJECTED: joint delta too large! "
+                        f"J{worst_joint} delta={max_delta:.3f} rad ({np.degrees(max_delta):.1f}°) "
+                        f"> limit {self.MAX_JOINT_DELTA} rad ({np.degrees(self.MAX_JOINT_DELTA):.1f}°). "
+                        f"current={[f'{x:.3f}' for x in joint_positions]}, "
+                        f"target={[f'{x:.3f}' for x in target_joints]}"
+                    )
+                    return
+
                 if max_delta > 0.3:
                     print("MOVING TOO FAST! SLOW DOWN!")
                     steps = min(int(max_delta / 0.05), 100)
