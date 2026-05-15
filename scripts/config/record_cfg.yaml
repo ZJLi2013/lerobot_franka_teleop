@@ -150,6 +150,13 @@ inference_camera:
   print_every: 1            # print every N steps (0 = silent)
   use_dataset_state: true   # feed dataset[0]['observation.state'] (recommended).
                             # If false, no state is sent.
+  force_fresh_action: false # If true, clear the policy's action queue every
+                            # step. Without this, pi0/ACT chunk N future
+                            # actions and only the 1st of every N frames is a
+                            # real forward pass; the rest are queue pops.
+                            # Set true to measure steady-state inference time.
+  print_action_dims: 8      # Only print the first N action dims (pi0 pads to
+                            # 32). Set to 0 / null to print all dims.
 
   # Cameras keyed by *dataset* image key. The dataset key is what the policy
   # was trained on (or what `image_key_map` below maps to a model-side key).

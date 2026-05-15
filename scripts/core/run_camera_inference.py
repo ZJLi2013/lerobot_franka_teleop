@@ -91,6 +91,18 @@ class CameraInferenceConfig:
         # episode and stay close to training distribution.
         self.use_dataset_state: bool = cfg.get("use_dataset_state", True)
 
+        # If True, call `policy.reset()` every step to clear any internal
+        # action chunk queue. Useful for measuring *steady-state* inference
+        # latency on policies that chunk multiple future actions (pi0 / pi05 /
+        # ACT). Without this the 2nd..n_action_steps frames are just queue
+        # pops (~ms), which is misleading.
+        self.force_fresh_action: bool = cfg.get("force_fresh_action", False)
+
+        # How many leading action dimensions to print. VLA policies (pi0)
+        # pad action to `max_action_dim=32`; for franka only the first ~8
+        # dims are meaningful. Set to None / 0 to print all dims.
+        self.print_action_dims: Optional[int] = cfg.get("print_action_dims", 8)
+
 
 def _make_camera(serial: str, width: int, height: int, fps: float) -> RealSenseCamera:
     """Construct + connect a RealSense camera with sane defaults."""
@@ -209,14 +221,20 @@ def run_camera_inference(cfg: CameraInferenceConfig) -> None:
             )
         _say("      all cameras connected.\n")
 
+        if cfg.force_fresh_action:
+            _say("      force_fresh_action=True: clearing the policy's action "
+                 "queue every step (measures *steady-state* inference latency)")
+
         period = 1.0 / cfg.fps if cfg.fps > 0 else 0.0
         step = 0
         with torch.no_grad():
             while cfg.max_steps is None or step < cfg.max_steps:
                 t_step = time.perf_counter()
 
+                if cfg.force_fresh_action:
+                    policy.reset()
+
                 batch: Dict[str, Any] = {}
-                cam_dt_ms = 0.0
                 t_cam = time.perf_counter()
                 for dataset_key, cam in cameras.items():
                     frame = cam.async_read(timeout_ms=2000)
@@ -228,6 +246,12 @@ def run_camera_inference(cfg: CameraInferenceConfig) -> None:
                     batch["observation.state"] = ref_state.unsqueeze(0).to(device)
                 batch["task"] = cfg.task_description
 
+                # Detect whether this select_action call will be a "fresh"
+                # forward pass or a queue pop. We probe the queue length
+                # *before* the call; this works for pi0 / pi05 / ACT.
+                queue_len_before = len(getattr(policy, "_action_queue", []))
+                fresh_call = queue_len_before == 0
+
                 t_inf = time.perf_counter()
                 batch = preprocessor(batch)
                 action = policy.select_action(batch)
@@ -237,10 +261,14 @@ def run_camera_inference(cfg: CameraInferenceConfig) -> None:
                 step_dt_ms = (time.perf_counter() - t_step) * 1000.0
 
                 if cfg.print_every > 0 and step % cfg.print_every == 0:
+                    n = cfg.print_action_dims
+                    show = action_np if not n else action_np[:n]
+                    fresh_marker = "FRESH" if fresh_call else "queue"
                     _say(
                         f"[{step:05d}] total={step_dt_ms:6.0f}ms "
-                        f"cam={cam_dt_ms:5.0f}ms infer={inf_dt_ms:5.0f}ms  "
-                        f"action={np.round(action_np, 3)}"
+                        f"cam={cam_dt_ms:5.0f}ms infer={inf_dt_ms:5.0f}ms "
+                        f"({fresh_marker})  "
+                        f"action[:{len(show)}]={np.round(show, 3)}"
                     )
 
                 step += 1
