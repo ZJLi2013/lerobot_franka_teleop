@@ -103,6 +103,13 @@ class CameraInferenceConfig:
         # dims are meaningful. Set to None / 0 to print all dims.
         self.print_action_dims: Optional[int] = cfg.get("print_action_dims", 8)
 
+        # Optional override for the policy's `num_inference_steps` field
+        # (currently used by pi0 / pi05 flow-matching). The default in
+        # pi0 is 10; lowering to 5 typically halves inference time with
+        # negligible action quality loss. Set to None to keep the
+        # checkpoint default.
+        self.num_inference_steps: Optional[int] = cfg.get("num_inference_steps")
+
 
 def _make_camera(serial: str, width: int, height: int, fps: float) -> RealSenseCamera:
     """Construct + connect a RealSense camera with sane defaults."""
@@ -163,6 +170,13 @@ def run_camera_inference(cfg: CameraInferenceConfig) -> None:
     policy_cfg = PreTrainedConfig.from_pretrained(cfg.pretrained_path)
     policy_cfg.pretrained_path = cfg.pretrained_path
     policy_cfg.device = cfg.device
+    if cfg.num_inference_steps is not None and hasattr(
+        policy_cfg, "num_inference_steps"
+    ):
+        old = getattr(policy_cfg, "num_inference_steps")
+        policy_cfg.num_inference_steps = int(cfg.num_inference_steps)
+        _say(f"      override num_inference_steps: {old} -> "
+             f"{policy_cfg.num_inference_steps}")
     _say(f"      done in {time.perf_counter() - t0:.1f}s "
          f"(policy type = {policy_cfg.type})")
 
