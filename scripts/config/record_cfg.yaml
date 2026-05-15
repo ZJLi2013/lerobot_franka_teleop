@@ -135,5 +135,36 @@ inference:
     observation.images.side:  observation.images.left_wrist_0_rgb
 
 
+inference_camera:
+  # Live RealSense -> policy inference (no robot, no master arm).
+  # Used by the `franka-infer-camera` command. The script reads frames from
+  # the cameras listed below, runs the policy, and prints the predicted
+  # action. The robot is NEVER moved.
+  pretrained_path: "/home/xunwang2/project/lerobot_test/pi0_base"
+  dataset_repo_id: Ziguan/pocket_tissues_2_paper_cup_2cam   # only used for stats + frame-0 state
+  episode_idx: 0
+  task_description: "pick up the Shanghai Green and put them into the brown basket"
+  device: "cuda"            # "cuda" or "cpu"
+  fps: 15                   # camera frame rate target
+  max_steps:                # leave empty/null to run forever (Ctrl+C to stop)
+  print_every: 1            # print every N steps (0 = silent)
+  use_dataset_state: true   # feed dataset[0]['observation.state'] (recommended).
+                            # If false, no state is sent.
 
+  # Cameras keyed by *dataset* image key. The dataset key is what the policy
+  # was trained on (or what `image_key_map` below maps to a model-side key).
+  cameras:
+    observation.images.front:
+      serial: "401622070138"   # exterior cam serial
+      width:  424
+      height: 240
+    observation.images.side:
+      serial: "244222071902"   # wrist cam serial
+      width:  424
+      height: 240
 
+  # Same semantics as `inference.image_key_map`: rename dataset keys to the
+  # keys the model expects. For pi0_base: base_0_rgb / left_wrist_0_rgb / ...
+  image_key_map:
+    observation.images.front: observation.images.base_0_rgb
+    observation.images.side:  observation.images.left_wrist_0_rgb

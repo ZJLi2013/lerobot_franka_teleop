@@ -11,6 +11,7 @@ Core Commands:
   franka-reset           Reset the robot to initial state
   franka-train          Train a policy on the recorded dataset
   franka-infer-offline  Run offline policy inference on a recorded dataset (no robot/camera needed)
+  franka-infer-camera   Run live RealSense -> policy inference (no robot; prints action)
 
 Utility Commands:
   utils-joint-offsets   Compute joint offsets for teleoperation
