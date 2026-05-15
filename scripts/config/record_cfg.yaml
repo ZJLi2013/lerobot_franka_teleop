@@ -22,7 +22,7 @@ record:
       # 3.142, 3.142, 3.142, 3.142, 1.571, 1.571, 6.283
       joint_offsets: [3.142, 3.142, 3.142, 3.142, 1.571, 1.571, 7.068] # robotiq hand offsets 3.142  franka_hand - 0.785 vitercial   +0.785  parll
       joint_signs: [1, -1, 1, 1, 1, 1, 1]
-      gripper_config: [8, 0.9664079, 1.9404857] # id, min, max
+      gripper_config: [8, 2.7838, 3.5133] # id, min, max
     spacemouse_config:
       channel_ids: [0, 1, 2, 3, 4, 5]
       channel_signs: [-1, -1, 1, -1, -1, 1]
@@ -72,7 +72,8 @@ record:
     type: "act"  # 策略类型 (act, diffusion)
     device: "cuda"  # 运行设备 (cuda, cpu)
     push_to_hub: False  # 禁用模型推送
-    pretrained_path: "/home/deepcybo/lerobot/franka_workspace/outputs/zhonghuai/lajiao_20260318_merged/act_test2/checkpoints/last/pretrained_model"
+    # pretrained_path: "/home/deepcybo/lerobot/franka_workspace/outputs/lihao-test-0310/diffusion_test1/checkpoints/last/pretrained_model"
+    pretrained_path: "/home/amd/modles/pretrained_model"
     # pretrained_path: "/home/deepcybo/lerobot/franka_workspace/outputs/lihao-test/act_test3/checkpoints/020000/pretrained_model"  
     # 预训练模型路径下要包括config.json
 
@@ -85,8 +86,8 @@ record:
     resume_dataset: babycare/mil_power_2_20260514_v07 # dataset to resume from if resume is True
   
   time:
-    episode_time_sec: 6000 # max time per episode in seconds
-    reset_time_sec: 6000 # max time to reset between episodes in seconds
+    episode_time_sec: 60 # max time per episode in seconds
+    reset_time_sec: 30 # max time to reset between episodes in seconds
     save_meta_period: 1 # Save metadata after every N episodes
 
   cameras:
@@ -99,7 +100,7 @@ record:
     push_to_hub: False # whether to push the dataset to your huggingface repo after recording
 
 replay:
-  dataset_name: babycare/milk_power_20260321_v03
+  dataset_name: babycare/milk_power_2_20260514_v07
   episode_idx: 0 # episode index to replay
   robot:
     ip: *ip
@@ -107,5 +108,5 @@ replay:
   control_mode: *control_mode 
 
 visualize:
-  dataset_name: babycare/milk_power_20260321_v03
+  dataset_name: babycare/milk_power_2_20260514_v07
   episode_index: 0 # episode index to visualize
