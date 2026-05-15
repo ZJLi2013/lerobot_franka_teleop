@@ -73,7 +73,7 @@ record:
     device: "cuda"  # 运行设备 (cuda, cpu)
     push_to_hub: False  # 禁用模型推送
     # pretrained_path: "/home/deepcybo/lerobot/franka_workspace/outputs/lihao-test-0310/diffusion_test1/checkpoints/last/pretrained_model"
-    pretrained_path: "/home/amd/modles/pretrained_model"
+    pretrained_path: "/home/amd/models/pretrained_model"
     # pretrained_path: "/home/deepcybo/lerobot/franka_workspace/outputs/lihao-test/act_test3/checkpoints/020000/pretrained_model"  
     # 预训练模型路径下要包括config.json
 
@@ -82,8 +82,8 @@ record:
     description: "pick up the red cube" # task description
     num_episodes: 80 # number of episodes to record
     display: True # Whether to display the data during recording
-    resume: true # whether to resume from an existing dataset
-    resume_dataset: babycare/mil_power_2_20260514_v07 # dataset to resume from if resume is True
+    resume: False # whether to resume from an existing dataset, will link to HF dataset
+    resume_dataset: babycare/milk_power_2_20260514_v07 # dataset to resume from if resume is True
   
   time:
     episode_time_sec: 60 # max time per episode in seconds
