@@ -66,9 +66,9 @@ conda activate franka_data
 ```bash
 # 安装指定版本 0.3.4
 # git checkout da5d2f3e9187fa4690e6667fe8b294cae49016d6
-git clone https://github.com/huggingface/lerobot.git
+git clone https://github.com/wangxunx/lerobot.git
 cd lerobot
-git checkout da5d2f3e9187fa4690e6667fe8b294cae49016d6
+git checkout 519_work_branch
 pip install -e .
 ```
 
