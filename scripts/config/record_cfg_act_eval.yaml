@@ -14,7 +14,7 @@ record:
   repo_id: &repo_id "lidavidsh/act_pick_cube_eval"
   debug: 1                  # ⚠ 首次务必设 1！确认 action 合理后再改 0
   user_notes: "ACT policy evaluation on real Franka"
-  fps: 5                   # ⚠ 首次务必低速！确认安全后再提到 10/15
+  fps: 6                   # ⚠ 首次务必低速！D435I 最低支持 6fps，确认安全后再提到 15/30
   control_mode: &control_mode "isoteleop"
   run_mode: "run_policy"   # 策略控制模式
 
@@ -62,9 +62,9 @@ record:
 
   policy:
     type: "act"
-    device: "cuda"
+    device: "cpu"
     push_to_hub: False
-    pretrained_path: "~/franka/models/real_frank_act_pick_cube"
+    pretrained_path: "/home/amd/franka/models/real_frank_act_pick_cube"
 
   task:
     description: "pick up the red cube"
@@ -88,11 +88,12 @@ record:
     push_to_hub: False
 
 inference_camera:
-  pretrained_path: "~/franka/models/real_frank_act_pick_cube"
+  pretrained_path: "/home/amd/franka/models/real_frank_act_pick_cube"
   dataset_repo_id: "lidavidsh/real_franka_pick_cube_cleaned"
   task_description: "pick up the red cube"
   device: "cpu"
   fps: 15
+  max_steps: 100
   print_every: 1
   print_action_dims: 8
   force_fresh_action: false

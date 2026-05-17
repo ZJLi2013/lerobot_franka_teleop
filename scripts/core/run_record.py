@@ -309,8 +309,6 @@ def run_record(record_cfg: RecordConfig):
         preprocessor = None
         postprocessor = None
 
-        robot.connect()
-
         # configure the teleop and policy
         if record_cfg.run_mode == "run_record":
             logging.info("====== [INFO] Running in teleoperation mode ======")
@@ -329,13 +327,14 @@ def run_record(record_cfg: RecordConfig):
             preprocessor, postprocessor = make_pre_post_processors(
                 policy_cfg=record_cfg.policy,
                 pretrained_path=record_cfg.policy.pretrained_path,
-                dataset_stats=rename_stats(dataset.meta.stats, {}),
+                dataset_stats=rename_stats(dataset.meta.stats, {}),  # 使用空字典作为rename_map
                 preprocessor_overrides={
                     "device_processor": {"device": record_cfg.policy.device},
-                    "rename_observations_processor": {"rename_map": {}},
+                    "rename_observations_processor": {"rename_map": {}},  # 使用空字典作为rename_map
                 },
             )
 
+        robot.connect()
         if teleop is not None:
             teleop.connect()
 
