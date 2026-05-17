@@ -251,9 +251,17 @@ class Franka(Robot):
     JOINT_LIMITS_MAX = np.array([ 2.8973,  1.7628,  2.8973, -0.0698,  2.8973,  3.7525,  2.8973])
     MAX_JOINT_DELTA = 0.5   # 单步最大允许关节变化量 (rad, ~28°)
 
+    _action_step = 0
+
     def _send_action_isoteleop(self, action: dict[str, Any]) -> None:
         """Send action in isoteleop mode (joint positions)."""
         target_joints = np.array([action[f"joint_{i+1}.pos"] for i in range(self._num_joints)])
+        gripper_val = action.get("gripper_position", action.get("gripper_cmd_bin", None))
+        if self.config.debug:
+            self._action_step += 1
+            if self._action_step <= 10 or self._action_step % 10 == 0:
+                fmt = [f"{x:.4f}" for x in target_joints]
+                logger.info(f"[ACTION #{self._action_step}] joints={fmt}  gripper={gripper_val}")
         
         if not self.config.debug:
             try:
