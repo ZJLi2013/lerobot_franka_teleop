@@ -338,6 +338,18 @@ def run_record(record_cfg: RecordConfig):
         if teleop is not None:
             teleop.connect()
 
+        if record_cfg.debug and record_cfg.run_mode == "run_policy":
+            _orig_send = robot.send_action
+            _step = [0]
+            def _logged_send(action):
+                _step[0] += 1
+                if _step[0] <= 10 or _step[0] % 10 == 0:
+                    joints = [f"{action.get(f'joint_{i+1}.pos', 0):.4f}" for i in range(7)]
+                    grip = action.get("gripper_position", action.get("gripper_cmd_bin", "?"))
+                    print(f"[ACTION #{_step[0]}] joints={joints}  gripper={grip}", flush=True)
+                return _orig_send(action)
+            robot.send_action = _logged_send
+
         episode_idx = 0
 
         while episode_idx < record_cfg.num_episodes and not events["stop_recording"]:
