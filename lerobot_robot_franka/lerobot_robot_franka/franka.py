@@ -261,7 +261,7 @@ class Franka(Robot):
             self._action_step += 1
             if self._action_step <= 10 or self._action_step % 10 == 0:
                 fmt = [f"{x:.4f}" for x in target_joints]
-                logger.info(f"[ACTION #{self._action_step}] joints={fmt}  gripper={gripper_val}")
+                print(f"[ACTION #{self._action_step}] joints={fmt}  gripper={gripper_val}", flush=True)
         
         if not self.config.debug:
             try:
