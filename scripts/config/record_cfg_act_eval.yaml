@@ -64,7 +64,7 @@ record:
     type: "act"
     device: "cuda"
     push_to_hub: False
-    pretrained_path: "lidavidsh/cube_real_franka_act_pick_cube"
+    pretrained_path: "~/franka/models/real_frank_act_pick_cube"
 
   task:
     description: "pick up the red cube"
@@ -88,7 +88,7 @@ record:
     push_to_hub: False
 
 inference_camera:
-  pretrained_path: "lidavidsh/cube_real_franka_act_pick_cube"
+  pretrained_path: "~/franka/models/real_frank_act_pick_cube"
   dataset_repo_id: "lidavidsh/real_franka_pick_cube_cleaned"
   task_description: "pick up the red cube"
   device: "cpu"
