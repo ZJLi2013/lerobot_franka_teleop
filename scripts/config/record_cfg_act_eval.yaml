@@ -87,6 +87,27 @@ record:
   storage:
     push_to_hub: False
 
+inference_camera:
+  pretrained_path: "lidavidsh/cube_real_franka_act_pick_cube"
+  dataset_repo_id: "lidavidsh/real_franka_pick_cube_cleaned"
+  task_description: "pick up the red cube"
+  device: "cpu"
+  fps: 15
+  print_every: 1
+  print_action_dims: 8
+  force_fresh_action: false
+  use_dataset_state: true
+  cameras:
+    observation.images.wrist_image:
+      serial: "244222071902"
+      width: 424
+      height: 240
+    observation.images.exterior_image:
+      serial: "401622070138"
+      width: 424
+      height: 240
+      roi: "scripts/tools/roi.json"
+
 replay:
   dataset_name: lidavidsh/act_pick_cube_eval
   episode_idx: 0
