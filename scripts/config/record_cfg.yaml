@@ -80,10 +80,10 @@ record:
   task:
     # description: "Pick up the green cube and put it into the trash bin." # task description
     description: "pick up the red cube" # task description
-    num_episodes: 80 # number of episodes to record
+    num_episodes: 20 # number of episodes to record
     display: True # Whether to display the data during recording
-    resume: False # whether to resume from an existing dataset, will link to HF dataset
-    resume_dataset: babycare/milk_power_2_20260514_v07 # dataset to resume from if resume is True
+    resume: True # whether to resume from an existing dataset, will link to HF dataset
+    resume_dataset: babycare/milk_power_2_20260515_v01 # dataset to resume from if resume is True
   
   time:
     episode_time_sec: 60 # max time per episode in seconds
