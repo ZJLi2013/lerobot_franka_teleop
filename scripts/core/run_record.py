@@ -419,8 +419,18 @@ def run_record(record_cfg: RecordConfig):
 
 
 def main():
-    parent_path = Path(__file__).resolve().parent
-    cfg_path = parent_path.parent / "config" / "record_cfg.yaml"
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config", type=str, default=None,
+                        help="Path to config yaml (default: scripts/config/record_cfg.yaml)")
+    args = parser.parse_args()
+
+    if args.config:
+        cfg_path = Path(args.config).resolve()
+    else:
+        parent_path = Path(__file__).resolve().parent
+        cfg_path = parent_path.parent / "config" / "record_cfg.yaml"
+
     with open(cfg_path, 'r') as f:
         cfg = yaml.safe_load(f)
 

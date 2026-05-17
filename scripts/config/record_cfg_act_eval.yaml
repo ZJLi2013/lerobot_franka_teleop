@@ -1,7 +1,6 @@
 # ACT 策略真机评估配置
-# 基于 record_cfg.yaml，改为 run_policy 模式 + 安全参数
 #
-# 使用方法：cp record_cfg_act_eval.yaml record_cfg.yaml && franka-record
+# 使用方法：franka-record --config scripts/config/record_cfg_act_eval.yaml
 #
 # 首次真机流程：
 #   1. debug: 1, fps: 5  → 只看 action 输出，不执行
@@ -12,7 +11,7 @@
 # 与 isoteleop 录制数据完全一致，不需要额外对齐
 
 record:
-  repo_id: &repo_id "babycare/act_eval"
+  repo_id: &repo_id "lidavidsh/act_pick_cube_eval"
   debug: 1                  # ⚠ 首次务必设 1！确认 action 合理后再改 0
   user_notes: "ACT policy evaluation on real Franka"
   fps: 5                   # ⚠ 首次务必低速！确认安全后再提到 10/15
@@ -65,11 +64,10 @@ record:
     type: "act"
     device: "cuda"
     push_to_hub: False
-    # ← 填你的 ACT checkpoint 路径，必须包含 config.json
-    pretrained_path: "/home/deepcybo/lerobot/franka_workspace/outputs/zhonghuai/lajiao_20260318_merged/act_test2/checkpoints/last/pretrained_model"
+    pretrained_path: "lidavidsh/cube_real_franka_act_pick_cube"
 
   task:
-    description: "pick up the Shanghai Green and put them into the brown basket"  # 必须与训练时一致
+    description: "pick up the red cube"
     num_episodes: 1         # 首次只跑 1 个 episode
     display: True
     resume: false
@@ -90,12 +88,12 @@ record:
     push_to_hub: False
 
 replay:
-  dataset_name: babycare/act_eval
+  dataset_name: lidavidsh/act_pick_cube_eval
   episode_idx: 0
   robot:
     ip: *ip
   control_mode: *control_mode
 
 visualize:
-  dataset_name: babycare/act_eval
+  dataset_name: lidavidsh/act_pick_cube_eval
   episode_index: 0
